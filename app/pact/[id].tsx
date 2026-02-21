@@ -112,7 +112,7 @@ export default function PactDetailScreen() {
           <View style={styles.photoGrid}>
             {submissions.slice(0, 6).map((sub) => (
               <Pressable key={sub.id} onPress={() => setLightboxUri(sub.photoUri)}>
-                <Image source={{ uri: sub.photoUri }} style={styles.gridPhoto} />
+                <Image source={{ uri: sub.photoUri }} style={styles.gridPhoto} resizeMode="cover" />
               </Pressable>
             ))}
           </View>
@@ -209,6 +209,7 @@ const styles = StyleSheet.create({
     width: PHOTO_SIZE,
     height: PHOTO_SIZE,
     borderRadius: borderRadius.md,
+    overflow: 'hidden',
   },
   lightboxOverlay: {
     flex: 1,
@@ -224,7 +225,7 @@ const styles = StyleSheet.create({
   },
   lightboxImage: {
     width: SCREEN_WIDTH - spacing.xl * 2,
-    height: SCREEN_WIDTH - spacing.xl * 2,
+    height: '80%',
     borderRadius: borderRadius.lg,
   },
 });

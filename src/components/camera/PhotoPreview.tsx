@@ -27,7 +27,7 @@ export default function PhotoPreview({ photoUri, onRetake, onVerify, onCrop }: P
 
   return (
     <Animated.View style={[styles.container, { opacity, transform: [{ translateY: slideY }] }]}>
-      <Image source={{ uri: photoUri }} style={styles.photo} />
+      <Image source={{ uri: photoUri }} style={styles.photo} resizeMode="cover" />
       <View style={styles.buttons}>
         <Pressable style={[styles.secondaryBtn, { backgroundColor: colors.backgroundTertiary, borderColor: colors.border }]} onPress={onRetake}>
           <Ionicons name="refresh" size={20} color={colors.textPrimary} />
@@ -59,6 +59,7 @@ const styles = StyleSheet.create({
     width: SCREEN_WIDTH - spacing.xl * 2,
     height: SCREEN_WIDTH - spacing.xl * 2,
     borderRadius: borderRadius.xxl,
+    overflow: 'hidden',
   },
   buttons: {
     flexDirection: 'row',
