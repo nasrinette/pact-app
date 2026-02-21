@@ -2,22 +2,24 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { StyleSheet, View, Image, Text, Animated, Easing } from 'react-native';
 import { spacing, typography, shadows } from '@/constants/theme';
 import { useTheme } from '@/contexts/ThemeContext';
+import { Pact } from '@/data/types';
 
 const PHOTO_SIZE = 260;
 
 interface AIAnalyzingProps {
   photoUri: string;
   onComplete: (matched: boolean, pactId?: string) => void;
+  availablePacts?: Pact[];
 }
 
 const STATUS_TEXTS = [
-  'Checking habits...',
-  'Matching pacts...',
-  'Verifying activity...',
+  'Scanning your photo...',
+  'Detecting activity...',
+  'Matching to your pacts...',
   'Almost there...',
 ];
 
-export default function AIAnalyzing({ photoUri, onComplete }: AIAnalyzingProps) {
+export default function AIAnalyzing({ photoUri, onComplete, availablePacts }: AIAnalyzingProps) {
   const { colors } = useTheme();
   const [dotCount, setDotCount] = useState(1);
   const [statusIndex, setStatusIndex] = useState(0);
@@ -29,8 +31,12 @@ export default function AIAnalyzing({ photoUri, onComplete }: AIAnalyzingProps) 
 
   const triggerComplete = useCallback(() => {
     const matched = Math.random() < 0.8;
-    onComplete(matched, matched ? 'p1' : undefined);
-  }, [onComplete]);
+    let detectedId: string | undefined;
+    if (matched && availablePacts && availablePacts.length > 0) {
+      detectedId = availablePacts[Math.floor(Math.random() * availablePacts.length)].id;
+    }
+    onComplete(matched, detectedId);
+  }, [onComplete, availablePacts]);
 
   useEffect(() => {
     Animated.timing(overlayOpacity, { toValue: 1, duration: 400, useNativeDriver: true }).start();

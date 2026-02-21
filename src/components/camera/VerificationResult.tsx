@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated } from 'react-native';
+import { View, Text, StyleSheet, Animated, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, typography, borderRadius, shadows } from '@/constants/theme';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -60,9 +60,10 @@ interface VerificationResultProps {
   pact?: Pact;
   onSend: () => void;
   onRetry: () => void;
+  onChangePact?: () => void;
 }
 
-export default function VerificationResult({ matched, pact, onSend, onRetry }: VerificationResultProps) {
+export default function VerificationResult({ matched, pact, onSend, onRetry, onChangePact }: VerificationResultProps) {
   const { colors } = useTheme();
   const streak = pact ? getStreakForUserPact(pact.id, 'u1') : undefined;
   const iconScale = useRef(new Animated.Value(0)).current;
@@ -99,6 +100,14 @@ export default function VerificationResult({ matched, pact, onSend, onRetry }: V
 
         <Animated.View style={[styles.cardWrapper, { opacity: contentOpacity }]}>
           <PactMatchCard pact={pact} streakDays={(streak?.currentStreak || 0) + 1} />
+          {onChangePact && (
+            <Pressable onPress={onChangePact} style={styles.changePactBtn}>
+              <Ionicons name="swap-horizontal" size={16} color={colors.textSecondary} />
+              <Text style={[styles.changePactText, { color: colors.textSecondary }]}>
+                Not right? Change pact
+              </Text>
+            </Pressable>
+          )}
         </Animated.View>
 
         <Animated.View style={[styles.buttonWrapper, { opacity: contentOpacity }]}>
@@ -169,5 +178,16 @@ const styles = StyleSheet.create({
   buttonWrapper: {
     width: '100%',
     marginTop: spacing.xxl,
+  },
+  changePactBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  changePactText: {
+    ...typography.caption,
   },
 });

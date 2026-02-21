@@ -10,6 +10,7 @@ import Card from '@/components/ui/Card';
 import IconBadge from '@/components/ui/IconBadge';
 import AvatarGroup from '@/components/ui/AvatarGroup';
 import Avatar from '@/components/ui/Avatar';
+import { adaptColor } from '@/utils/colorUtils';
 
 interface PactCardProps {
   pact: Pact;
@@ -17,7 +18,8 @@ interface PactCardProps {
 }
 
 export default function PactCard({ pact, onPress }: PactCardProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+  const pactColor = adaptColor(pact.color, isDark);
   const participants = getParticipants(pact);
   const myStreak = getStreakForUserPact(pact.id, 'u1');
   const pendingFriends = getPendingParticipants(pact);
@@ -60,7 +62,7 @@ export default function PactCard({ pact, onPress }: PactCardProps) {
   return (
     <Card onPress={onPress} style={styles.card}>
       <View style={styles.row}>
-        <IconBadge icon={pact.icon} color={pact.color} size={48} />
+        <IconBadge icon={pact.icon} color={pactColor} size={48} />
 
         <View style={styles.center}>
           <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>{pact.title}</Text>
@@ -71,8 +73,8 @@ export default function PactCard({ pact, onPress }: PactCardProps) {
 
         <View style={styles.right}>
           <View style={styles.streakRow}>
-            <Ionicons name="flame" size={16} color={colors.streakFire} />
-            <Text style={[styles.streakCount, { color: colors.streakFire }]}>
+            <Ionicons name="flame" size={16} color={colors.streakFireText} />
+            <Text style={[styles.streakCount, { color: colors.streakFireText }]}>
               {myStreak?.currentStreak || 0}
             </Text>
           </View>

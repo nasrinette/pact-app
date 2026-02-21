@@ -68,7 +68,7 @@ export const pacts: Pact[] = [
     title: 'No Phone Before 9am',
     icon: 'phone-portrait-outline',
     iconFamily: 'Ionicons',
-    color: '#6C63FF',
+    color: '#F38181',
     frequency: 'daily',
     participants: ['u1', 'u5'],
     createdAt: '2026-02-05',
@@ -119,29 +119,38 @@ export const submissions: Submission[] = [
   { id: 's18', pactId: 'p5', userId: 'u1', photoUri: 'https://picsum.photos/seed/phone2/400/400', timestamp: '2026-02-17T09:00:00Z', verified: true },
 ];
 
+// Streaks are group-based: for a streak to continue, ALL participants must complete the task.
+// Daily pacts: streak = consecutive days completed. Weekly pacts: streak = consecutive weeks meeting the target.
 export const streakData: StreakData[] = [
-  { pactId: 'p1', userId: 'u1', currentStreak: 12, longestStreak: 18, completedDates: generateDates(30) },
-  { pactId: 'p1', userId: 'u2', currentStreak: 15, longestStreak: 20, completedDates: generateDates(30) },
-  { pactId: 'p1', userId: 'u3', currentStreak: 8, longestStreak: 14, completedDates: generateDates(30, true) },
-  { pactId: 'p2', userId: 'u1', currentStreak: 22, longestStreak: 22, completedDates: generateDates(30) },
-  { pactId: 'p2', userId: 'u4', currentStreak: 10, longestStreak: 16, completedDates: generateDates(30, true) },
-  { pactId: 'p2', userId: 'u5', currentStreak: 7, longestStreak: 12, completedDates: generateDates(30, true) },
-  { pactId: 'p3', userId: 'u1', currentStreak: 18, longestStreak: 25, completedDates: generateDates(30) },
-  { pactId: 'p3', userId: 'u2', currentStreak: 14, longestStreak: 20, completedDates: generateDates(30, true) },
-  { pactId: 'p3', userId: 'u6', currentStreak: 9, longestStreak: 15, completedDates: generateDates(30, true) },
-  { pactId: 'p4', userId: 'u1', currentStreak: 5, longestStreak: 10, completedDates: generateDates(17) },
-  { pactId: 'p4', userId: 'u3', currentStreak: 11, longestStreak: 17, completedDates: generateDates(17, true) },
-  { pactId: 'p4', userId: 'u4', currentStreak: 3, longestStreak: 8, completedDates: generateDates(17, true) },
-  { pactId: 'p4', userId: 'u6', currentStreak: 14, longestStreak: 17, completedDates: generateDates(17) },
-  { pactId: 'p5', userId: 'u1', currentStreak: 6, longestStreak: 13, completedDates: generateDates(13) },
-  { pactId: 'p5', userId: 'u5', currentStreak: 4, longestStreak: 9, completedDates: generateDates(13, true) },
+  // p1: Morning Run — daily, group streak 12 days, longest 18 days
+  { pactId: 'p1', userId: 'u1', currentStreak: 12, longestStreak: 18, completedDates: generateDates(30), streakType: 'daily' },
+  { pactId: 'p1', userId: 'u2', currentStreak: 12, longestStreak: 18, completedDates: generateDates(30), streakType: 'daily' },
+  { pactId: 'p1', userId: 'u3', currentStreak: 12, longestStreak: 18, completedDates: generateDates(30), streakType: 'daily' },
+  // p2: Read 30 Min — daily, group streak 22 days, longest 22 days
+  { pactId: 'p2', userId: 'u1', currentStreak: 22, longestStreak: 22, completedDates: generateDates(30), streakType: 'daily' },
+  { pactId: 'p2', userId: 'u4', currentStreak: 22, longestStreak: 22, completedDates: generateDates(30), streakType: 'daily' },
+  { pactId: 'p2', userId: 'u5', currentStreak: 22, longestStreak: 22, completedDates: generateDates(30), streakType: 'daily' },
+  // p3: Healthy Meals — weekly (5x/week), group streak 4 weeks, longest 6 weeks
+  { pactId: 'p3', userId: 'u1', currentStreak: 4, longestStreak: 6, completedDates: generateDates(30), streakType: 'weekly' },
+  { pactId: 'p3', userId: 'u2', currentStreak: 4, longestStreak: 6, completedDates: generateDates(30), streakType: 'weekly' },
+  { pactId: 'p3', userId: 'u6', currentStreak: 4, longestStreak: 6, completedDates: generateDates(30), streakType: 'weekly' },
+  // p4: Meditate — daily, group streak 5 days, longest 10 days
+  { pactId: 'p4', userId: 'u1', currentStreak: 5, longestStreak: 10, completedDates: generateDates(17), streakType: 'daily' },
+  { pactId: 'p4', userId: 'u3', currentStreak: 5, longestStreak: 10, completedDates: generateDates(17), streakType: 'daily' },
+  { pactId: 'p4', userId: 'u4', currentStreak: 5, longestStreak: 10, completedDates: generateDates(17), streakType: 'daily' },
+  { pactId: 'p4', userId: 'u6', currentStreak: 5, longestStreak: 10, completedDates: generateDates(17), streakType: 'daily' },
+  // p5: No Phone Before 9am — daily, group streak 6 days, longest 13 days
+  { pactId: 'p5', userId: 'u1', currentStreak: 6, longestStreak: 13, completedDates: generateDates(13), streakType: 'daily' },
+  { pactId: 'p5', userId: 'u5', currentStreak: 6, longestStreak: 13, completedDates: generateDates(13), streakType: 'daily' },
 ];
 
 export const notifications: Notification[] = [
   { id: 'n1', type: 'nudge', fromUserId: 'u2', pactId: 'p1', message: "Sarah nudged you: Don't break the streak! Go for your run!", timestamp: '2026-02-18T10:00:00Z', read: false },
   { id: 'n2', type: 'deadline_warning', pactId: 'p4', message: 'Meditation deadline is in 2 hours! Your pact friends are waiting.', timestamp: '2026-02-18T20:00:00Z', read: false },
   { id: 'n3', type: 'new_submission', fromUserId: 'u3', pactId: 'p1', message: 'Jake just submitted his morning run!', timestamp: '2026-02-18T06:45:00Z', read: true },
-  { id: 'n4', type: 'streak_milestone', pactId: 'p2', message: 'Amazing! 3-week reading streak!', timestamp: '2026-02-17T22:00:00Z', read: true },
+  { id: 'n4', type: 'streak_milestone', pactId: 'p2', message: 'Amazing! 22-day reading streak!', timestamp: '2026-02-17T22:00:00Z', read: true },
+  { id: 'n5', type: 'streak_milestone', pactId: 'p3', message: '4-week Healthy Meals streak! Keep it going!', timestamp: '2026-02-16T18:00:00Z', read: true },
+  { id: 'n6', type: 'deadline_warning', pactId: 'p3', message: 'Healthy Meals: 3 of 5 done this week. 2 days left to hit your target!', timestamp: '2026-02-18T09:00:00Z', read: false },
 ];
 
 export function getUserById(id: string): User | undefined {
@@ -189,6 +198,18 @@ export function getCompletionRate(pactId: string, userId: string): number {
 
 export function getUnreadNotificationCount(): number {
   return notifications.filter(n => !n.read).length;
+}
+
+export function getAggregateActivity(userId: string): Record<string, number> {
+  const activity: Record<string, number> = {};
+  streakData
+    .filter(s => s.userId === userId)
+    .forEach(s => {
+      s.completedDates.forEach(date => {
+        activity[date] = (activity[date] || 0) + 1;
+      });
+    });
+  return activity;
 }
 
 export function getRecentActivity(): (Submission & { user: User; pact: Pact })[] {

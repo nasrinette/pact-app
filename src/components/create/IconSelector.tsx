@@ -2,7 +2,8 @@ import React from 'react';
 import { View, Pressable, StyleSheet, FlatList } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, borderRadius, layout, withAlpha } from '@/constants/theme';
-import { pactIcons } from '@/constants/icons';
+import { getPactIcons } from '@/constants/icons';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface IconSelectorProps {
   selectedIcon: string | null;
@@ -10,9 +11,12 @@ interface IconSelectorProps {
 }
 
 export default function IconSelector({ selectedIcon, onSelect }: IconSelectorProps) {
+  const { isDark } = useTheme();
+  const icons = getPactIcons(isDark);
+
   return (
     <FlatList
-      data={pactIcons}
+      data={icons}
       numColumns={5}
       scrollEnabled={false}
       keyExtractor={(item) => item.name}

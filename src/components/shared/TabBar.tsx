@@ -40,6 +40,8 @@ export default function TabBar({ state, descriptors, navigation }: TabBarProps) 
             const iconName = TAB_ICONS[route.name] || 'ellipse';
             const label = TAB_LABELS[route.name] || route.name;
             const isCamera = route.name === 'camera';
+            const cameraBg = isDark ? colors.textPrimary : colors.textPrimary;
+            const cameraIcon = isDark ? colors.background : colors.background;
 
             const onPress = () => {
               const event = navigation.emit({
@@ -56,24 +58,12 @@ export default function TabBar({ state, descriptors, navigation }: TabBarProps) 
 
             if (isCamera) {
               return (
-                <Pressable key={route.key} onPress={onPress} style={styles.cameraTabWrapper}>
-                  <View style={[
-                    styles.cameraButton,
-                    { backgroundColor: colors.backgroundTertiary, borderColor: colors.border },
-                    isFocused && {
-                      backgroundColor: colors.primary,
-                      borderColor: colors.primaryLight,
-                      shadowColor: colors.primary,
-                      shadowOffset: { width: 0, height: 0 },
-                      shadowOpacity: 0.5,
-                      shadowRadius: 12,
-                      elevation: 8,
-                    },
-                  ]}>
+                <Pressable key={route.key} onPress={onPress} style={styles.tab}>
+                  <View style={[styles.cameraIcon, { backgroundColor: cameraBg }]}>
                     <Ionicons
-                      name={isFocused ? 'camera' : 'camera-outline'}
-                      size={26}
-                      color={isFocused ? colors.onPrimary : colors.textSecondary}
+                      name="camera"
+                      size={20}
+                      color={cameraIcon}
                     />
                   </View>
                   <Text style={[styles.label, { color: isFocused ? colors.primary : colors.textTertiary }]}>
@@ -85,7 +75,7 @@ export default function TabBar({ state, descriptors, navigation }: TabBarProps) 
 
             return (
               <Pressable key={route.key} onPress={onPress} style={styles.tab}>
-                <View style={[styles.iconWrapper, isFocused && { backgroundColor: colors.tabBarActiveBg }]}>
+                <View style={styles.iconWrapper}>
                   <Ionicons
                     name={
                       isFocused
@@ -141,22 +131,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: borderRadius.md,
   },
+  cameraIcon: {
+    width: 36,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: borderRadius.full,
+  },
   label: {
     ...typography.tabLabel,
     marginTop: spacing.xxs,
-  },
-  cameraTabWrapper: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingVertical: spacing.xs,
-  },
-  cameraButton: {
-    width: 48,
-    height: 34,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
   },
 });

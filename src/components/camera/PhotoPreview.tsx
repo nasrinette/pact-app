@@ -10,9 +10,10 @@ interface PhotoPreviewProps {
   photoUri: string;
   onRetake: () => void;
   onVerify: () => void;
+  onCrop?: () => void;
 }
 
-export default function PhotoPreview({ photoUri, onRetake, onVerify }: PhotoPreviewProps) {
+export default function PhotoPreview({ photoUri, onRetake, onVerify, onCrop }: PhotoPreviewProps) {
   const { colors } = useTheme();
   const opacity = useRef(new Animated.Value(0)).current;
   const slideY = useRef(new Animated.Value(30)).current;
@@ -28,10 +29,16 @@ export default function PhotoPreview({ photoUri, onRetake, onVerify }: PhotoPrev
     <Animated.View style={[styles.container, { opacity, transform: [{ translateY: slideY }] }]}>
       <Image source={{ uri: photoUri }} style={styles.photo} />
       <View style={styles.buttons}>
-        <Pressable style={[styles.retakeBtn, { backgroundColor: colors.backgroundTertiary, borderColor: colors.border }]} onPress={onRetake}>
+        <Pressable style={[styles.secondaryBtn, { backgroundColor: colors.backgroundTertiary, borderColor: colors.border }]} onPress={onRetake}>
           <Ionicons name="refresh" size={20} color={colors.textPrimary} />
           <Text style={[styles.btnText, { color: colors.textPrimary }]}>Retake</Text>
         </Pressable>
+        {onCrop && (
+          <Pressable style={[styles.secondaryBtn, { backgroundColor: colors.backgroundTertiary, borderColor: colors.border }]} onPress={onCrop}>
+            <Ionicons name="crop" size={20} color={colors.textPrimary} />
+            <Text style={[styles.btnText, { color: colors.textPrimary }]}>Crop</Text>
+          </Pressable>
+        )}
         <Pressable style={[styles.verifyBtn, { backgroundColor: colors.primary }]} onPress={onVerify}>
           <Ionicons name="sparkles" size={20} color={colors.onPrimary} />
           <Text style={[styles.btnText, { color: colors.onPrimary }]}>Verify with AI</Text>
@@ -59,7 +66,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xxl,
     width: '100%',
   },
-  retakeBtn: {
+  secondaryBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, FlatList, StyleSheet, Text, Pressable } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,13 +8,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { notifications as mockNotifications, getUserById } from '@/data/mock';
 import IconBadge from '@/components/ui/IconBadge';
 import { Notification } from '@/data/types';
-
-const ICON_MAP: Record<Notification['type'], { icon: string; color: string }> = {
-  nudge: { icon: 'hand-left', color: '#4ECDC4' },
-  deadline_warning: { icon: 'alarm', color: '#FF6B6B' },
-  streak_milestone: { icon: 'trophy', color: '#FFE66D' },
-  new_submission: { icon: 'camera', color: '#95E1D3' },
-};
+import { adaptColor } from '@/utils/colorUtils';
 
 function timeAgo(timestamp: string): string {
   const now = Date.now();
@@ -33,7 +27,14 @@ function timeAgo(timestamp: string): string {
 export default function NotificationsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+
+  const iconMap = useMemo<Record<Notification['type'], { icon: string; color: string }>>(() => ({
+    nudge:            { icon: 'hand-left', color: adaptColor('#4ECDC4', isDark) },
+    deadline_warning: { icon: 'alarm',     color: adaptColor('#FF6B6B', isDark) },
+    streak_milestone: { icon: 'trophy',    color: adaptColor('#FFE66D', isDark) },
+    new_submission:   { icon: 'camera',    color: adaptColor('#95E1D3', isDark) },
+  }), [isDark]);
 
   const [notificationsList, setNotificationsList] = useState(mockNotifications);
 
@@ -45,7 +46,7 @@ export default function NotificationsScreen() {
 
   const renderItem = useCallback(
     ({ item }: { item: Notification }) => {
-      const { icon, color } = ICON_MAP[item.type];
+      const { icon, color } = iconMap[item.type];
 
       return (
         <View

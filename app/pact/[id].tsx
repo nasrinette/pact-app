@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, borderRadius, typography } from '@/constants/theme';
 import { useTheme } from '@/contexts/ThemeContext';
+import { adaptColor } from '@/utils/colorUtils';
 import {
   getPactById,
   getParticipants,
@@ -30,12 +31,13 @@ export default function PactDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
 
   const [lightboxUri, setLightboxUri] = useState<string | null>(null);
 
   const pact = getPactById(id);
   if (!pact) return null;
+  const pactColor = adaptColor(pact.color, isDark);
 
   const participants = getParticipants(pact);
   const submissions = getSubmissionsForPact(pact.id);
@@ -53,9 +55,11 @@ export default function PactDetailScreen() {
         {/* Header */}
         <PactDetailHeader pact={pact}>
           <View style={styles.streakRow}>
-            <Ionicons name="flame" size={22} color={pact.color} />
-            <Text style={[styles.streakNumber, { color: pact.color }]}>{myStreak?.currentStreak || 0}</Text>
-            <Text style={[styles.streakLabel, { color: colors.textSecondary }]}>day streak</Text>
+            <Ionicons name="flame" size={22} color={pactColor} />
+            <Text style={[styles.streakNumber, { color: pactColor }]}>{myStreak?.currentStreak || 0}</Text>
+            <Text style={[styles.streakLabel, { color: colors.textSecondary }]}>
+              {myStreak?.streakType === 'weekly' ? 'week' : 'day'} streak
+            </Text>
           </View>
         </PactDetailHeader>
 
@@ -74,7 +78,7 @@ export default function PactDetailScreen() {
             <View style={[styles.calendarCard, { backgroundColor: colors.backgroundSecondary, borderColor: colors.border }]}>
               <CalendarGrid
                 completedDates={myStreak.completedDates}
-                color={pact.color}
+                color={pactColor}
               />
               <View style={[styles.streakStats, { borderTopColor: colors.border }]}>
                 <View style={styles.statItem}>

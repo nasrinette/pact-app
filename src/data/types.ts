@@ -31,9 +31,12 @@ export interface Submission {
 export interface StreakData {
   pactId: string;
   userId: string;
+  /** For daily pacts: consecutive days. For weekly pacts: consecutive weeks meeting the target. */
   currentStreak: number;
   longestStreak: number;
   completedDates: string[];
+  /** 'daily' or 'weekly' — mirrors the pact's frequency for display purposes. */
+  streakType: 'daily' | 'weekly';
 }
 
 export interface Notification {

@@ -4,6 +4,7 @@ import { spacing, borderRadius, typography, withAlpha } from '@/constants/theme'
 import { useTheme } from '@/contexts/ThemeContext';
 import { Pact } from '@/data/types';
 import IconBadge from '@/components/ui/IconBadge';
+import { adaptColor } from '@/utils/colorUtils';
 
 interface PactDetailHeaderProps {
   pact: Pact;
@@ -11,11 +12,12 @@ interface PactDetailHeaderProps {
 }
 
 export default function PactDetailHeader({ pact, children }: PactDetailHeaderProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+  const pactColor = adaptColor(pact.color, isDark);
 
   return (
-    <View style={[styles.container, { backgroundColor: withAlpha(pact.color, 0.07) }]}>
-      <IconBadge icon={pact.icon} color={pact.color} size={64} />
+    <View style={[styles.container, { backgroundColor: withAlpha(pactColor, 0.07) }]}>
+      <IconBadge icon={pact.icon} color={pactColor} size={64} />
       <Text style={[styles.title, { color: colors.textPrimary }]}>{pact.title}</Text>
       <Text style={[styles.frequency, { color: colors.textSecondary }]}>
         {pact.frequency === 'daily' ? 'Daily' : `${pact.timesPerWeek}x per week`}

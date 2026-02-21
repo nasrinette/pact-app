@@ -5,6 +5,7 @@ import { spacing, borderRadius, typography, withAlpha, shadows } from '@/constan
 import { useTheme } from '@/contexts/ThemeContext';
 import { Pact } from '@/data/types';
 import IconBadge from '@/components/ui/IconBadge';
+import { adaptColor } from '@/utils/colorUtils';
 
 interface PactMatchCardProps {
   pact: Pact;
@@ -12,7 +13,8 @@ interface PactMatchCardProps {
 }
 
 export default function PactMatchCard({ pact, streakDays }: PactMatchCardProps) {
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+  const pactColor = adaptColor(pact.color, isDark);
   const slideY = useRef(new Animated.Value(40)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
@@ -35,12 +37,14 @@ export default function PactMatchCard({ pact, streakDays }: PactMatchCardProps) 
       },
     ]}>
       <View style={styles.row}>
-        <IconBadge icon={pact.icon} color={pact.color} size={48} />
+        <IconBadge icon={pact.icon} color={pactColor} size={48} />
         <View style={styles.info}>
           <Text style={[styles.title, { color: colors.textPrimary }]}>{pact.title}</Text>
           <View style={styles.streakRow}>
-            <Text style={[styles.streak, { color: colors.streakFire }]}>Day {streakDays}</Text>
-            <Ionicons name="flame" size={16} color={colors.streakFire} />
+            <Text style={[styles.streak, { color: colors.streakFireText }]}>
+              {pact.frequency === 'weekly' ? `Week ${streakDays}` : `Day ${streakDays}`}
+            </Text>
+            <Ionicons name="flame" size={16} color={colors.streakFireText} />
           </View>
         </View>
       </View>

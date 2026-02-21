@@ -4,7 +4,8 @@ import {
   StyleSheet,
   Text,
   Pressable,
-  ScrollView,
+  Modal,
+  FlatList,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -14,6 +15,7 @@ import * as Haptics from 'expo-haptics';
 import { spacing, borderRadius, typography, layout, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/contexts/ThemeContext';
 import { pacts } from '@/data/mock';
+import { adaptColor } from '@/utils/colorUtils';
 import IconBadge from '@/components/ui/IconBadge';
 import ShutterButton from '@/components/camera/ShutterButton';
 import PhotoPreview from '@/components/camera/PhotoPreview';
@@ -25,12 +27,12 @@ type CameraState = 'ready' | 'preview' | 'analyzing' | 'result';
 export default function CameraScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
   const [state, setState] = useState<CameraState>('ready');
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [matched, setMatched] = useState(false);
-  const [matchedPactId, setMatchedPactId] = useState<string | undefined>();
-  const [selectedPactId, setSelectedPactId] = useState<string>(pacts[0]?.id || '');
+  const [detectedPactId, setDetectedPactId] = useState<string | undefined>();
+  const [showPactPicker, setShowPactPicker] = useState(false);
 
   const handleCapture = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -48,6 +50,19 @@ export default function CameraScreen() {
     }
   };
 
+  const handleCrop = async () => {
+    if (!photoUri) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.8,
+      allowsEditing: true,
+      aspect: [1, 1],
+    });
+    if (!result.canceled && result.assets[0]) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
+
   const handleVerify = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setState('analyzing');
@@ -55,7 +70,7 @@ export default function CameraScreen() {
 
   const handleAnalysisComplete = (isMatch: boolean, pactId?: string) => {
     setMatched(isMatch);
-    setMatchedPactId(isMatch ? selectedPactId : pactId);
+    setDetectedPactId(pactId);
     setState('result');
     if (isMatch) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -73,10 +88,11 @@ export default function CameraScreen() {
     setState('ready');
     setPhotoUri(null);
     setMatched(false);
-    setMatchedPactId(undefined);
+    setDetectedPactId(undefined);
+    setShowPactPicker(false);
   };
 
-  const matchedPact = matchedPactId ? pacts.find((p) => p.id === matchedPactId) : undefined;
+  const matchedPact = detectedPactId ? pacts.find((p) => p.id === detectedPactId) : undefined;
 
   if (state === 'ready') {
     return (
@@ -86,7 +102,7 @@ export default function CameraScreen() {
             <Ionicons name="camera" size={64} color={colors.textTertiary} />
             <Text style={[styles.cameraHint, { color: colors.textSecondary }]}>Take a photo to verify your pact</Text>
             <Text style={[styles.cameraSubHint, { color: colors.textTertiary }]}>
-              Snap a pic of your activity and we'll match it
+              Our AI will detect which pact it matches
             </Text>
           </View>
 
@@ -94,29 +110,6 @@ export default function CameraScreen() {
           <View style={[styles.corner, styles.cornerTR, { borderColor: colors.primary }]} />
           <View style={[styles.corner, styles.cornerBL, { borderColor: colors.primary }]} />
           <View style={[styles.corner, styles.cornerBR, { borderColor: colors.primary }]} />
-        </View>
-
-        {/* Pact Selector */}
-        <View style={styles.pactSelectorContainer}>
-          <Text style={[styles.pactSelectorLabel, { color: colors.textTertiary }]}>Verifying for</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pactSelectorScroll}>
-            {pacts.map((pact) => {
-              const isSelected = pact.id === selectedPactId;
-              return (
-                <Pressable
-                  key={pact.id}
-                  onPress={() => setSelectedPactId(pact.id)}
-                  style={[
-                    styles.pactSelectorItem,
-                    { borderColor: isSelected ? pact.color : colors.border, backgroundColor: isSelected ? withAlpha(pact.color, 0.1) : colors.backgroundSecondary },
-                  ]}
-                >
-                  <IconBadge icon={pact.icon} color={pact.color} size={32} />
-                  <Text style={[styles.pactSelectorTitle, { color: isSelected ? colors.textPrimary : colors.textSecondary }]} numberOfLines={1}>{pact.title}</Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
         </View>
 
         <View style={styles.controls}>
@@ -135,7 +128,7 @@ export default function CameraScreen() {
   if (state === 'preview' && photoUri) {
     return (
       <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
-        <PhotoPreview photoUri={photoUri} onRetake={resetCamera} onVerify={handleVerify} />
+        <PhotoPreview photoUri={photoUri} onRetake={resetCamera} onVerify={handleVerify} onCrop={handleCrop} />
       </View>
     );
   }
@@ -143,7 +136,7 @@ export default function CameraScreen() {
   if (state === 'analyzing' && photoUri) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <AIAnalyzing photoUri={photoUri} onComplete={handleAnalysisComplete} />
+        <AIAnalyzing photoUri={photoUri} onComplete={handleAnalysisComplete} availablePacts={pacts} />
       </View>
     );
   }
@@ -156,7 +149,45 @@ export default function CameraScreen() {
           pact={matchedPact}
           onSend={handleSend}
           onRetry={resetCamera}
+          onChangePact={() => setShowPactPicker(true)}
         />
+
+        {/* Pact Picker Modal */}
+        <Modal visible={showPactPicker} transparent animationType="slide" onRequestClose={() => setShowPactPicker(false)}>
+          <Pressable style={styles.pickerOverlay} onPress={() => setShowPactPicker(false)}>
+            <Pressable style={[styles.pickerSheet, { backgroundColor: colors.backgroundSecondary }]} onPress={() => {}}>
+              <View style={[styles.pickerHandle, { backgroundColor: colors.textTertiary }]} />
+              <Text style={[styles.pickerTitle, { color: colors.textPrimary }]}>Select Pact</Text>
+              <FlatList
+                data={pacts}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item: pact }) => {
+                  const pactColor = adaptColor(pact.color, isDark);
+                  const isSelected = pact.id === detectedPactId;
+                  return (
+                    <Pressable
+                      style={[
+                        styles.pickerRow,
+                        { borderBottomColor: colors.border },
+                        isSelected && { backgroundColor: withAlpha(pactColor, 0.08) },
+                      ]}
+                      onPress={() => {
+                        setDetectedPactId(pact.id);
+                        setShowPactPicker(false);
+                      }}
+                    >
+                      <IconBadge icon={pact.icon} color={pactColor} size={40} />
+                      <Text style={[styles.pickerPactTitle, { color: colors.textPrimary }]}>{pact.title}</Text>
+                      {isSelected && (
+                        <Ionicons name="checkmark-circle" size={22} color={colors.primary} />
+                      )}
+                    </Pressable>
+                  );
+                }}
+              />
+            </Pressable>
+          </Pressable>
+        </Modal>
       </View>
     );
   }
@@ -245,29 +276,41 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1,
   },
-  pactSelectorContainer: {
+  pickerOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  pickerSheet: {
+    borderTopLeftRadius: borderRadius.xxl,
+    borderTopRightRadius: borderRadius.xxl,
+    paddingBottom: 40,
+    maxHeight: '60%',
+  },
+  pickerHandle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: spacing.md,
+    marginBottom: spacing.lg,
+    opacity: 0.4,
+  },
+  pickerTitle: {
+    ...typography.h3,
     paddingHorizontal: spacing.xl,
-    marginBottom: spacing.md,
+    marginBottom: spacing.lg,
   },
-  pactSelectorLabel: {
-    ...typography.caption,
-    marginBottom: spacing.sm,
-  },
-  pactSelectorScroll: {
-    gap: spacing.sm,
-  },
-  pactSelectorItem: {
+  pickerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    borderWidth: 1.5,
+    gap: spacing.md,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderBottomWidth: 1,
   },
-  pactSelectorTitle: {
-    ...typography.caption,
-    fontWeight: '600',
-    maxWidth: 80,
+  pickerPactTitle: {
+    ...typography.bodyBold,
+    flex: 1,
   },
 });

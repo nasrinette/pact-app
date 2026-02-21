@@ -4,14 +4,19 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { spacing, borderRadius, typography, layout, withAlpha } from '@/constants/theme';
 import { useTheme } from '@/contexts/ThemeContext';
-import { pacts, streakData } from '@/data/mock';
+import { pacts, streakData, getAggregateActivity } from '@/data/mock';
 import StreakCard from '@/components/streaks/StreakCard';
+import ActivityGraph from '@/components/streaks/ActivityGraph';
 import Header from '@/components/shared/Header';
 import EmptyState from '@/components/shared/EmptyState';
+import Card from '@/components/ui/Card';
+import { adaptColor } from '@/utils/colorUtils';
 
 export default function StreaksScreen() {
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const { colors, isDark } = useTheme();
+  const aggregateActivity = getAggregateActivity('u1');
+  const graphColor = adaptColor(colors.primary, isDark);
 
   const totalStreak = streakData
     .filter((s) => s.userId === 'u1')
@@ -35,13 +40,24 @@ export default function StreaksScreen() {
           title="Streaks"
           subtitle="Your consistency journey"
           rightAction={
-            <View style={[styles.totalBadge, { backgroundColor: withAlpha(colors.streakFire, 0.12) }]}>
-              <Ionicons name="flame" size={18} color={colors.streakFire} />
-              <Text style={[styles.totalCount, { color: colors.streakFire }]}>{totalStreak}</Text>
-              <Text style={[styles.totalLabel, { color: colors.streakFire }]}>total</Text>
+            <View style={[styles.totalBadge, { backgroundColor: withAlpha(colors.streakFireText, 0.12) }]}>
+              <Ionicons name="flame" size={18} color={colors.streakFireText} />
+              <Text style={[styles.totalCount, { color: colors.streakFireText }]}>{totalStreak}</Text>
+              <Text style={[styles.totalLabel, { color: colors.streakFireText }]}>total</Text>
             </View>
           }
         />
+
+        {hasStreaks && (
+          <Card style={styles.activityCard}>
+            <Text style={[styles.activityTitle, { color: colors.textPrimary }]}>Activity</Text>
+            <ActivityGraph
+              activityMap={aggregateActivity}
+              color={graphColor}
+              weeksToShow={16}
+            />
+          </Card>
+        )}
 
         {hasStreaks ? (
           sortedPacts.map((pact) => (
@@ -80,5 +96,12 @@ const styles = StyleSheet.create({
   totalLabel: {
     ...typography.caption,
     opacity: 0.7,
+  },
+  activityCard: {
+    marginBottom: spacing.lg,
+  },
+  activityTitle: {
+    ...typography.h3,
+    marginBottom: spacing.sm,
   },
 });
