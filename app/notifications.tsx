@@ -111,7 +111,7 @@ export default function NotificationsScreen() {
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <Pressable style={styles.backButton} onPress={() => router.back()}>
+        <Pressable style={styles.backButton} onPress={() => router.canGoBack() ? router.back() : router.replace('/')}>
           <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
           <Text style={[styles.backText, { color: colors.textPrimary }]}>Back</Text>
         </Pressable>

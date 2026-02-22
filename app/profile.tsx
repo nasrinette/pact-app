@@ -51,7 +51,7 @@ export default function ProfileScreen() {
         {/* Back button */}
         <Pressable
           style={styles.backButton}
-          onPress={() => router.back()}
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/')}
         >
           <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
           <Text style={[styles.backText, { color: colors.textPrimary }]}>Back</Text>
