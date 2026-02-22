@@ -10,6 +10,7 @@ import {
   Modal,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -36,6 +37,7 @@ export default function PactDetailScreen() {
 
   const [lightboxUri, setLightboxUri] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<any[]>([]);
+  const [givingUp, setGivingUp] = useState(false);
 
   const pact = getPactById(id);
 
@@ -61,10 +63,12 @@ export default function PactDetailScreen() {
     if (Platform.OS === 'web') {
       const confirmed = window.confirm(confirmMessage);
       if (!confirmed) return;
+      setGivingUp(true);
       try {
         await leavePact(pact.id);
         router.replace('/');
       } catch (e: any) {
+        setGivingUp(false);
         window.alert(e.message || 'Failed to leave pact');
       }
     } else {
@@ -77,10 +81,12 @@ export default function PactDetailScreen() {
             text: 'I Give Up',
             style: 'destructive',
             onPress: async () => {
+              setGivingUp(true);
               try {
                 await leavePact(pact.id);
                 router.replace('/');
               } catch (e: any) {
+                setGivingUp(false);
                 Alert.alert('Error', e.message || 'Failed to leave pact');
               }
             },
@@ -181,11 +187,18 @@ export default function PactDetailScreen() {
             Giving up means losing your {myStreak?.currentStreak || 0}-day streak{participants.length > 1 ? ' and letting your friends down' : ''}.
           </Text>
           <Pressable
-            style={[styles.giveUpButton, { borderColor: colors.error }]}
+            style={[styles.giveUpButton, { borderColor: colors.error }, givingUp && styles.disabled]}
             onPress={handleGiveUp}
+            disabled={givingUp}
           >
-            <Ionicons name="flag-outline" size={16} color={colors.error} />
-            <Text style={[styles.giveUpText, { color: colors.error }]}>Give Up</Text>
+            {givingUp ? (
+              <ActivityIndicator size="small" color={colors.error} />
+            ) : (
+              <>
+                <Ionicons name="flag-outline" size={16} color={colors.error} />
+                <Text style={[styles.giveUpText, { color: colors.error }]}>Give Up</Text>
+              </>
+            )}
           </Pressable>
         </View>
 
@@ -354,5 +367,8 @@ const styles = StyleSheet.create({
   },
   giveUpText: {
     ...typography.bodyBold,
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

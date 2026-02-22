@@ -63,10 +63,12 @@ export default function NewPactScreen() {
   const [timesPerWeek, setTimesPerWeek] = useState(3);
   const [selectedFriends, setSelectedFriends] = useState<string[]>([]);
   const [created, setCreated] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const { refetch } = useData();
 
   const submitPact = async () => {
+    setLoading(true);
     try {
       await api.post('/pacts', {
         title: title.trim(),
@@ -78,10 +80,12 @@ export default function NewPactScreen() {
       });
       await refetch();
     } catch (e: any) {
+      setLoading(false);
       Alert.alert('Error', e.message || 'Failed to create pact');
       return;
     }
 
+    setLoading(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setCreated(true);
 
@@ -214,6 +218,7 @@ export default function NewPactScreen() {
               variant="primary"
               fullWidth
               icon="checkmark-circle"
+              loading={loading}
             />
           </View>
 

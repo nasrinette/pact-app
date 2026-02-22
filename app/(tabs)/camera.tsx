@@ -35,6 +35,7 @@ export default function CameraScreen() {
   const [matched, setMatched] = useState(false);
   const [detectedPactId, setDetectedPactId] = useState<string | undefined>();
   const [showPactPicker, setShowPactPicker] = useState(false);
+  const [sending, setSending] = useState(false);
 
   const handleCapture = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -73,6 +74,7 @@ export default function CameraScreen() {
 
   const handleSend = async () => {
     if (detectedPactId && photoUri) {
+      setSending(true);
       try {
         const { getToken } = require('@/api/client');
         const { Platform } = require('react-native');
@@ -112,8 +114,11 @@ export default function CameraScreen() {
         await refetch();
       } catch (e) {
         console.error('Failed to submit:', e);
+        setSending(false);
+        return;
       }
     }
+    setSending(false);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     resetCamera();
   };
@@ -199,6 +204,7 @@ export default function CameraScreen() {
           onSend={handleSend}
           onRetry={resetCamera}
           onChangePact={() => setShowPactPicker(true)}
+          loading={sending}
         />
 
         {/* Pact Picker Modal */}

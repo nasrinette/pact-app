@@ -62,9 +62,10 @@ interface VerificationResultProps {
   onSend: () => void;
   onRetry: () => void;
   onChangePact?: () => void;
+  loading?: boolean;
 }
 
-export default function VerificationResult({ matched, pact, onSend, onRetry, onChangePact }: VerificationResultProps) {
+export default function VerificationResult({ matched, pact, onSend, onRetry, onChangePact, loading }: VerificationResultProps) {
   const { colors } = useTheme();
   const { user } = useAuth();
   const { getStreakForUserPact } = useData();
@@ -114,7 +115,7 @@ export default function VerificationResult({ matched, pact, onSend, onRetry, onC
         </Animated.View>
 
         <Animated.View style={[styles.buttonWrapper, { opacity: contentOpacity }]}>
-          <Button title="Send to Pact" onPress={onSend} variant="primary" fullWidth icon="send" />
+          <Button title="Send to Pact" onPress={onSend} variant="primary" fullWidth icon="send" loading={loading} />
         </Animated.View>
       </View>
     );

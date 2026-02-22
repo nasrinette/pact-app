@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { View, FlatList, StyleSheet, Text, Pressable } from 'react-native';
+import { View, FlatList, StyleSheet, Text, Pressable, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -41,6 +41,8 @@ export default function NotificationsScreen() {
   }), [isDark]);
 
   const [notificationsList, setNotificationsList] = useState(dataNotifications);
+  const [markingRead, setMarkingRead] = useState(false);
+  const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
   // Refetch data whenever the notifications screen is focused
   useFocusEffect(
@@ -54,6 +56,7 @@ export default function NotificationsScreen() {
   }, [dataNotifications]);
 
   const markAllRead = useCallback(async () => {
+    setMarkingRead(true);
     setNotificationsList((prev) =>
       prev.map((n) => ({ ...n, read: true }))
     );
@@ -63,6 +66,7 @@ export default function NotificationsScreen() {
     } catch (e) {
       console.error('Failed to mark notifications as read:', e);
     }
+    setMarkingRead(false);
   }, [refetch]);
 
   const renderItem = useCallback(
@@ -99,15 +103,31 @@ export default function NotificationsScreen() {
             {item.type === 'pact_invitation' && !item.read && (
               <View style={styles.invitationActions}>
                 <Pressable
-                  style={[styles.acceptBtn, { backgroundColor: colors.success }]}
-                  onPress={() => acceptInvitation(item.id).catch(console.error)}
+                  style={[styles.acceptBtn, { backgroundColor: colors.success }, loadingAction === item.id && styles.disabled]}
+                  disabled={loadingAction === item.id}
+                  onPress={async () => {
+                    setLoadingAction(item.id);
+                    try { await acceptInvitation(item.id); } catch (e) { console.error(e); }
+                    setLoadingAction(null);
+                  }}
                 >
-                  <Ionicons name="checkmark" size={16} color={colors.onSuccess} />
-                  <Text style={[styles.actionText, { color: colors.onSuccess }]}>Join</Text>
+                  {loadingAction === item.id ? (
+                    <ActivityIndicator size="small" color={colors.onSuccess} />
+                  ) : (
+                    <>
+                      <Ionicons name="checkmark" size={16} color={colors.onSuccess} />
+                      <Text style={[styles.actionText, { color: colors.onSuccess }]}>Join</Text>
+                    </>
+                  )}
                 </Pressable>
                 <Pressable
-                  style={[styles.declineBtn, { backgroundColor: colors.backgroundTertiary, borderColor: colors.border }]}
-                  onPress={() => declineInvitation(item.id).catch(console.error)}
+                  style={[styles.declineBtn, { backgroundColor: colors.backgroundTertiary, borderColor: colors.border }, loadingAction === item.id && styles.disabled]}
+                  disabled={loadingAction === item.id}
+                  onPress={async () => {
+                    setLoadingAction(item.id);
+                    try { await declineInvitation(item.id); } catch (e) { console.error(e); }
+                    setLoadingAction(null);
+                  }}
                 >
                   <Ionicons name="close" size={16} color={colors.textSecondary} />
                   <Text style={[styles.actionText, { color: colors.textSecondary }]}>Decline</Text>
@@ -135,8 +155,12 @@ export default function NotificationsScreen() {
           <Text style={[styles.backText, { color: colors.textPrimary }]}>Back</Text>
         </Pressable>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Notifications</Text>
-        <Pressable onPress={markAllRead} style={styles.markAllButton}>
-          <Text style={[styles.markAllText, { color: colors.primary }]}>Mark all read</Text>
+        <Pressable onPress={markAllRead} style={styles.markAllButton} disabled={markingRead}>
+          {markingRead ? (
+            <ActivityIndicator size="small" color={colors.primary} />
+          ) : (
+            <Text style={[styles.markAllText, { color: colors.primary }]}>Mark all read</Text>
+          )}
         </Pressable>
       </View>
 
@@ -264,5 +288,8 @@ const styles = StyleSheet.create({
   actionText: {
     ...typography.caption,
     fontWeight: '600',
+  },
+  disabled: {
+    opacity: 0.5,
   },
 });

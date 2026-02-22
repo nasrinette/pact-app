@@ -32,6 +32,7 @@ export default function ProfileScreen() {
   const { colors, isDark, mode, setMode } = useTheme();
   const { user, logout } = useAuth();
   const { users, pacts, streaks: streakData, recentActivity } = useData();
+  const [signingOut, setSigningOut] = React.useState(false);
 
   const friends = users;
 
@@ -160,16 +161,21 @@ export default function ProfileScreen() {
             title="Sign Out"
             variant="ghost"
             icon="log-out-outline"
+            loading={signingOut}
             onPress={() => {
+              const doLogout = async () => {
+                setSigningOut(true);
+                await logout();
+              };
               if (Platform.OS === 'web') {
                 if (window.confirm('Are you sure you want to sign out?')) {
-                  logout();
+                  doLogout();
                 }
               } else {
                 const { Alert } = require('react-native');
                 Alert.alert('Sign Out', 'Are you sure?', [
                   { text: 'Cancel', style: 'cancel' },
-                  { text: 'Sign Out', style: 'destructive', onPress: logout },
+                  { text: 'Sign Out', style: 'destructive', onPress: doLogout },
                 ]);
               }
             }}
