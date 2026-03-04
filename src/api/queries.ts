@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from './client';
 import { queryKeys } from './queryKeys';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, Pact, Submission, StreakData, Notification } from '@/data/types';
+import { User, Pact, Submission, StreakData, Notification, ChatMessage } from '@/data/types';
 
 export interface PactWithDetails extends Pact {
   participantDetails?: User[];
@@ -104,6 +104,15 @@ export function usePactSubmissions(pactId: string) {
   return useQuery({
     queryKey: queryKeys.pacts.submissions(pactId),
     queryFn: () => api.get<(Submission & { user?: User })[]>(`/pacts/${pactId}/submissions`),
+    enabled: !!token && !!pactId,
+  });
+}
+
+export function usePactMessages(pactId: string) {
+  const { token } = useAuth();
+  return useQuery({
+    queryKey: queryKeys.messages.forPact(pactId),
+    queryFn: () => api.get<{ messages: ChatMessage[]; hasMore: boolean }>(`/pacts/${pactId}/messages`),
     enabled: !!token && !!pactId,
   });
 }

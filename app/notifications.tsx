@@ -50,6 +50,8 @@ export default function NotificationsScreen() {
     friend_request:   { icon: 'person-add',   color: adaptColor('#4ECDC4', isDark) },
     friend_accepted:  { icon: 'people',       color: adaptColor('#95E1D3', isDark) },
     pact_declined:    { icon: 'close-circle', color: adaptColor('#FF6B6B', isDark) },
+    reaction:         { icon: 'heart',        color: adaptColor('#FF6B6B', isDark) },
+    chat_message:     { icon: 'chatbubble',   color: adaptColor('#4ECDC4', isDark) },
   }), [isDark]);
 
   const [notificationsList, setNotificationsList] = useState(dataNotifications);

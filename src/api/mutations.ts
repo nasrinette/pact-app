@@ -207,6 +207,31 @@ export function useInviteToPact() {
   });
 }
 
+export function useToggleReaction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ submissionId, emoji }: { submissionId: string; emoji: string }) =>
+      api.post<{ toggled: 'added' | 'removed'; reactions: any[] }>('/reactions', { submissionId, emoji }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.pacts.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.submissions.recent });
+      // Also invalidate any pact-specific submissions
+      queryClient.invalidateQueries({ queryKey: ['pacts'] });
+    },
+  });
+}
+
+export function useSendMessage() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ pactId, text }: { pactId: string; text: string }) =>
+      api.post(`/pacts/${pactId}/messages`, { text }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.messages.forPact(variables.pactId) });
+    },
+  });
+}
+
 export function useRemoveFriend() {
   const queryClient = useQueryClient();
   return useMutation({

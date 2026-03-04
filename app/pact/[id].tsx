@@ -21,12 +21,16 @@ import { adaptColor } from '@/utils/colorUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDataHelpers } from '@/api/helpers';
 import { usePactSubmissions } from '@/api/queries';
-import { useLeavePact, useNudge, useInviteToPact } from '@/api/mutations';
+import { useLeavePact, useNudge, useInviteToPact, useToggleReaction } from '@/api/mutations';
 import { useUsers } from '@/api/queries';
+import { Submission, ReactionSummary } from '@/data/types';
 import Avatar from '@/components/ui/Avatar';
 import PactDetailHeader from '@/components/pacts/PactDetailHeader';
 import ParticipantRow from '@/components/pacts/ParticipantRow';
 import CalendarGrid from '@/components/streaks/CalendarGrid';
+import ReactionBar from '@/components/shared/ReactionBar';
+import PactChat from '@/components/pacts/PactChat';
+import { usePactSocket } from '@/api/socket';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -42,11 +46,15 @@ export default function PactDetailScreen() {
   const leavePactMutation = useLeavePact();
   const nudgeMutation = useNudge();
   const inviteMutation = useInviteToPact();
+  const toggleReaction = useToggleReaction();
   const { data: friends = [] } = useUsers();
+
+  // Subscribe to real-time updates for this pact
+  usePactSocket(id);
 
   const [showInvite, setShowInvite] = useState(false);
 
-  const [lightboxUri, setLightboxUri] = useState<string | null>(null);
+  const [lightboxSubmission, setLightboxSubmission] = useState<(Submission & { user?: any }) | null>(null);
   const [givingUp, setGivingUp] = useState(false);
 
   const pact = getPactById(id);
@@ -218,11 +226,23 @@ export default function PactDetailScreen() {
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Submissions</Text>
           <View style={styles.photoGrid}>
             {submissions.slice(0, 6).map((sub) => (
-              <Pressable key={sub.id} onPress={() => setLightboxUri(sub.photoUri)}>
+              <Pressable key={sub.id} onPress={() => setLightboxSubmission(sub)} style={styles.gridPhotoContainer}>
                 <Image source={{ uri: sub.photoUri }} style={styles.gridPhoto} resizeMode="cover" />
+                {sub.reactions && sub.reactions.length > 0 && (
+                  <View style={[styles.reactionIndicator, { backgroundColor: 'rgba(0,0,0,0.6)' }]}>
+                    <Text style={styles.reactionIndicatorText}>
+                      {sub.reactions.map(r => r.emoji).join('')}
+                    </Text>
+                  </View>
+                )}
               </Pressable>
             ))}
           </View>
+        </View>
+
+        {/* Group Chat */}
+        <View style={styles.section}>
+          <PactChat pactId={pact.id} />
         </View>
 
         {/* Give Up */}
@@ -250,13 +270,39 @@ export default function PactDetailScreen() {
       </ScrollView>
 
       {/* Photo Lightbox */}
-      <Modal visible={!!lightboxUri} transparent animationType="fade" onRequestClose={() => setLightboxUri(null)}>
-        <Pressable style={styles.lightboxOverlay} onPress={() => setLightboxUri(null)}>
-          <Pressable style={styles.lightboxClose} onPress={() => setLightboxUri(null)}>
+      <Modal visible={!!lightboxSubmission} transparent animationType="fade" onRequestClose={() => setLightboxSubmission(null)}>
+        <Pressable style={styles.lightboxOverlay} onPress={() => setLightboxSubmission(null)}>
+          <Pressable style={styles.lightboxClose} onPress={() => setLightboxSubmission(null)}>
             <Ionicons name="close" size={28} color={colors.overlayTextPrimary} />
           </Pressable>
-          {lightboxUri && (
-            <Image source={{ uri: lightboxUri }} style={styles.lightboxImage} resizeMode="contain" />
+          {lightboxSubmission && (
+            <>
+              <Image source={{ uri: lightboxSubmission.photoUri }} style={styles.lightboxImage} resizeMode="contain" />
+              {lightboxSubmission.user && (
+                <View style={styles.lightboxUser}>
+                  <Avatar uri={lightboxSubmission.user.avatar} name={lightboxSubmission.user.name} size={24} />
+                  <Text style={styles.lightboxUserName}>{lightboxSubmission.user.name}</Text>
+                </View>
+              )}
+              <Pressable onPress={(e) => e.stopPropagation()} style={styles.lightboxReactions}>
+                <ReactionBar
+                  reactions={lightboxSubmission.reactions || []}
+                  onToggle={(emoji) => {
+                    toggleReaction.mutate(
+                      { submissionId: lightboxSubmission.id, emoji },
+                      {
+                        onSuccess: (data) => {
+                          setLightboxSubmission(prev =>
+                            prev ? { ...prev, reactions: data.reactions } : null
+                          );
+                        },
+                      }
+                    );
+                  }}
+                  disabled={toggleReaction.isPending}
+                />
+              </Pressable>
+            </>
           )}
         </Pressable>
       </Modal>
@@ -333,11 +379,25 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     gap: spacing.sm,
   },
+  gridPhotoContainer: {
+    position: 'relative',
+  },
   gridPhoto: {
     width: PHOTO_SIZE,
     height: PHOTO_SIZE,
     borderRadius: borderRadius.md,
     overflow: 'hidden',
+  },
+  reactionIndicator: {
+    position: 'absolute',
+    bottom: 4,
+    left: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  reactionIndicatorText: {
+    fontSize: 10,
   },
   lightboxOverlay: {
     flex: 1,
@@ -353,8 +413,22 @@ const styles = StyleSheet.create({
   },
   lightboxImage: {
     width: SCREEN_WIDTH - spacing.xl * 2,
-    height: '80%',
+    height: '60%',
     borderRadius: borderRadius.lg,
+  },
+  lightboxUser: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  lightboxUserName: {
+    ...typography.bodyBold,
+    color: '#fff',
+  },
+  lightboxReactions: {
+    marginTop: spacing.md,
+    width: SCREEN_WIDTH - spacing.xl * 2,
   },
   pendingSection: {
     marginTop: spacing.md,

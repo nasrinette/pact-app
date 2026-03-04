@@ -19,4 +19,7 @@ export const queryKeys = {
   submissions: {
     recent: ['submissions', 'recent'] as const,
   },
+  messages: {
+    forPact: (pactId: string) => ['messages', pactId] as const,
+  },
 } as const;

@@ -21,6 +21,12 @@ export interface Pact {
   deadline: string;
 }
 
+export interface ReactionSummary {
+  emoji: string;
+  count: number;
+  reacted: boolean;
+}
+
 export interface Submission {
   id: string;
   pactId: string;
@@ -28,6 +34,16 @@ export interface Submission {
   photoUri: string;
   timestamp: string;
   verified: boolean;
+  reactions?: ReactionSummary[];
+}
+
+export interface ChatMessage {
+  id: string;
+  pactId: string;
+  userId: string;
+  text: string;
+  createdAt: string;
+  user: User;
 }
 
 export interface StreakData {
@@ -43,7 +59,7 @@ export interface StreakData {
 
 export interface Notification {
   id: string;
-  type: 'nudge' | 'deadline_warning' | 'streak_milestone' | 'new_submission' | 'pact_invitation' | 'friend_request' | 'friend_accepted';
+  type: 'nudge' | 'deadline_warning' | 'streak_milestone' | 'new_submission' | 'pact_invitation' | 'friend_request' | 'friend_accepted' | 'reaction' | 'chat_message';
   fromUserId?: string;
   pactId?: string;
   message: string;

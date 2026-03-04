@@ -7,6 +7,7 @@ import { queryClient } from '@/api/queryClient';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { isPushSupported, isSubscribedToPush, subscribeToPush } from '@/api/pushSubscription';
+import { connectSocket, disconnectSocket } from '@/api/socket';
 import LoginScreen from './login';
 
 function RootStack() {
@@ -16,6 +17,9 @@ function RootStack() {
   React.useEffect(() => {
     if (!token) {
       queryClient.clear();
+      disconnectSocket();
+    } else {
+      connectSocket();
     }
   }, [token]);
 
