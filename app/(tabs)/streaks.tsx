@@ -13,6 +13,7 @@ import Header from '@/components/shared/Header';
 import EmptyState from '@/components/shared/EmptyState';
 import Card from '@/components/ui/Card';
 import { adaptColor } from '@/utils/colorUtils';
+import { FreezeInfo } from '@/data/types';
 
 const HEADER_HEIGHT = 72;
 
@@ -34,6 +35,18 @@ export default function StreaksScreen() {
   });
 
   const hasStreaks = streakData.length > 0;
+
+  // Aggregate freeze inventory across all daily pacts
+  const freezeInventory = streakData
+    .filter(s => s.freezeInfo)
+    .map(s => ({
+      pact: pacts.find(p => p.id === s.pactId),
+      freezeInfo: s.freezeInfo as FreezeInfo,
+    }))
+    .filter(item => item.pact);
+
+  const totalFreezes = freezeInventory.reduce((sum, item) => sum + item.freezeInfo.available, 0);
+  const totalUsed = freezeInventory.reduce((sum, item) => sum + item.freezeInfo.used, 0);
 
   const headerContent = (
     <View style={[styles.stickyHeaderInner, { paddingHorizontal: spacing.xl }]}>
@@ -80,6 +93,59 @@ export default function StreaksScreen() {
               color={graphColor}
               weeksToShow={16}
             />
+          </Card>
+        )}
+
+        {/* Freeze Inventory */}
+        {freezeInventory.length > 0 && (
+          <Card style={styles.freezeCard}>
+            <View style={styles.freezeHeader}>
+              <View style={styles.freezeHeaderLeft}>
+                <Ionicons name="snow" size={20} color="#5BC0EB" />
+                <Text style={[styles.freezeTitle, { color: colors.textPrimary }]}>Streak Freezes</Text>
+              </View>
+              <View style={[styles.freezeTotalBadge, { backgroundColor: 'rgba(91, 192, 235, 0.12)' }]}>
+                <Text style={styles.freezeTotalText}>{totalFreezes}</Text>
+                <Text style={styles.freezeTotalLabel}>available</Text>
+              </View>
+            </View>
+            {freezeInventory.map(({ pact: p, freezeInfo: fi }) => {
+              const pColor = adaptColor(p!.color, isDark);
+              return (
+                <View key={p!.id} style={[styles.freezeRow, { borderTopColor: colors.border }]}>
+                  <View style={styles.freezeRowLeft}>
+                    <Text style={[styles.freezePactName, { color: colors.textPrimary }]} numberOfLines={1}>{p!.title}</Text>
+                    <Text style={[styles.freezeStatus, { color: colors.textTertiary }]}>
+                      {fi.available > 0
+                        ? `${fi.available} freeze${fi.available > 1 ? 's' : ''} ready`
+                        : fi.nextFreezeIn > 0
+                          ? `${fi.nextFreezeIn}d to earn`
+                          : 'Earning...'}
+                    </Text>
+                  </View>
+                  <View style={styles.freezeDotsSmall}>
+                    {Array.from({ length: 2 }).map((_, i) => (
+                      <View
+                        key={i}
+                        style={[
+                          styles.freezeDotSmall,
+                          {
+                            backgroundColor: i < fi.available ? '#5BC0EB' : colors.backgroundTertiary,
+                          },
+                        ]}
+                      >
+                        <Ionicons name="snow" size={10} color={i < fi.available ? '#fff' : colors.textTertiary} />
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              );
+            })}
+            {totalUsed > 0 && (
+              <Text style={[styles.freezeUsedNote, { color: colors.textTertiary }]}>
+                {totalUsed} freeze{totalUsed !== 1 ? 's' : ''} used all time
+              </Text>
+            )}
           </Card>
         )}
 
@@ -139,5 +205,73 @@ const styles = StyleSheet.create({
   activityTitle: {
     ...typography.h3,
     marginBottom: spacing.sm,
+  },
+  freezeCard: {
+    marginBottom: spacing.lg,
+  },
+  freezeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: spacing.md,
+  },
+  freezeHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  freezeTitle: {
+    ...typography.bodyBold,
+  },
+  freezeTotalBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    gap: spacing.xs,
+  },
+  freezeTotalText: {
+    ...typography.bodyBold,
+    color: '#5BC0EB',
+  },
+  freezeTotalLabel: {
+    ...typography.caption,
+    color: '#5BC0EB',
+    opacity: 0.8,
+  },
+  freezeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+  },
+  freezeRowLeft: {
+    flex: 1,
+    marginRight: spacing.md,
+  },
+  freezePactName: {
+    ...typography.body,
+  },
+  freezeStatus: {
+    ...typography.caption,
+    marginTop: 2,
+  },
+  freezeDotsSmall: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+  },
+  freezeDotSmall: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  freezeUsedNote: {
+    ...typography.caption,
+    textAlign: 'center',
+    marginTop: spacing.md,
   },
 });

@@ -53,7 +53,7 @@ export default function StreakCard({ pact }: StreakCardProps) {
         />
       </View>
 
-      <CalendarGrid completedDates={streak.completedDates} color={pactColor} />
+      <CalendarGrid completedDates={streak.completedDates} freezeDates={streak.freezeInfo?.freezeDates} color={pactColor} />
 
       <View style={[styles.footer, { borderTopColor: colors.border }]}>
         <Text style={[styles.longestLabel, { color: colors.textTertiary }]}>Longest streak</Text>
