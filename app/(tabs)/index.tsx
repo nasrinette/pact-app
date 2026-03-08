@@ -19,7 +19,7 @@ import DeadlineWarning from '@/components/pacts/DeadlineWarning';
 import EmptyState from '@/components/shared/EmptyState';
 import HomeSkeleton from '@/components/shared/HomeSkeleton';
 
-const HEADER_HEIGHT = 80;
+const HEADER_HEIGHT = 64;
 
 const NEXT_MODE: Record<string, 'light' | 'dark'> = {
   system: 'light',
@@ -50,8 +50,8 @@ export default function PactsHomeScreen() {
   const deadlineWarning = notifications.find(n => n.type === 'deadline_warning' && !n.read);
 
   const headerContent = (
-    <View style={[styles.header, { paddingHorizontal: spacing.xxxl }]}>
-      <Logo color={colors.textPrimary} width={86} height={48} />
+    <View style={[styles.header, { paddingHorizontal: spacing.xl }]}>
+      <Logo color={colors.textPrimary} width={78} height={40} />
       <View style={styles.headerRight}>
         <Pressable
           style={[styles.themeToggle, { backgroundColor: colors.backgroundTertiary, borderColor: colors.border }]}
