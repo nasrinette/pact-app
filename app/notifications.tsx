@@ -11,6 +11,8 @@ import { useMarkNotificationsRead, useAcceptInvitation, useDeclineInvitation, us
 import { queryKeys } from '@/api/queryKeys';
 import { useQueryClient } from '@tanstack/react-query';
 import IconBadge from '@/components/ui/IconBadge';
+import Skeleton from '@/components/ui/Skeleton';
+import ErrorState from '@/components/shared/ErrorState';
 import { Notification } from '@/data/types';
 import { adaptColor } from '@/utils/colorUtils';
 
@@ -38,6 +40,9 @@ export default function NotificationsScreen() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    isLoading,
+    isError,
+    refetch,
   } = useFlatNotifications();
   const markReadMutation = useMarkNotificationsRead();
   const acceptMutation = useAcceptInvitation();
@@ -234,31 +239,47 @@ export default function NotificationsScreen() {
       </View>
 
       {/* Notification List with infinite scroll */}
-      <FlatList
-        data={dataNotifications}
-        renderItem={renderItem}
-        keyExtractor={keyExtractor}
-        showsVerticalScrollIndicator={false}
-        onEndReached={handleLoadMore}
-        onEndReachedThreshold={0.4}
-        ListFooterComponent={renderFooter}
-        contentContainerStyle={dataNotifications.length === 0 ? styles.emptyContainer : undefined}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Ionicons
-              name="notifications-off-outline"
-              size={64}
-              color={colors.textTertiary}
-            />
-            <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
-              All caught up!
-            </Text>
-            <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>
-              No notifications yet
-            </Text>
-          </View>
-        }
-      />
+      {isLoading ? (
+        <View style={styles.skeletonContainer}>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <View key={i} style={[styles.row, { borderBottomColor: colors.border }]}>
+              <Skeleton width={44} height={44} radius={22} />
+              <View style={{ flex: 1, gap: spacing.sm }}>
+                <Skeleton width="80%" height={16} />
+                <Skeleton width="40%" height={12} />
+              </View>
+            </View>
+          ))}
+        </View>
+      ) : isError ? (
+        <ErrorState message="Couldn't load notifications" onRetry={() => refetch()} />
+      ) : (
+        <FlatList
+          data={dataNotifications}
+          renderItem={renderItem}
+          keyExtractor={keyExtractor}
+          showsVerticalScrollIndicator={false}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.4}
+          ListFooterComponent={renderFooter}
+          contentContainerStyle={dataNotifications.length === 0 ? styles.emptyContainer : undefined}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Ionicons
+                name="notifications-off-outline"
+                size={64}
+                color={colors.textTertiary}
+              />
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>
+                All caught up!
+              </Text>
+              <Text style={[styles.emptySubtitle, { color: colors.textTertiary }]}>
+                No notifications yet
+              </Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 }
@@ -367,5 +388,8 @@ const styles = StyleSheet.create({
   footerLoader: {
     paddingVertical: spacing.xl,
     alignItems: 'center',
+  },
+  skeletonContainer: {
+    flex: 1,
   },
 });

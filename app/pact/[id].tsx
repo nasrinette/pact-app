@@ -21,7 +21,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { adaptColor } from '@/utils/colorUtils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDataHelpers } from '@/api/helpers';
-import { useFlatPactSubmissions } from '@/api/queries';
+import { useFlatPactSubmissions, usePacts } from '@/api/queries';
 import { useLeavePact, useNudge, useInviteToPact, useToggleReaction, useUpdatePact } from '@/api/mutations';
 import { useUsers } from '@/api/queries';
 import { Submission, ReactionSummary } from '@/data/types';
@@ -40,6 +40,8 @@ import FrequencyPicker from '@/components/create/FrequencyPicker';
 import PactChat from '@/components/pacts/PactChat';
 import { usePactSocket } from '@/api/socket';
 import { featureFlags } from '@/config/featureFlags';
+import ErrorState from '@/components/shared/ErrorState';
+import Skeleton from '@/components/ui/Skeleton';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -51,6 +53,7 @@ export default function PactDetailScreen() {
 
   const { user } = useAuth();
   const { getPactById, getParticipants, getStreakForPact } = useDataHelpers();
+  const { isLoading: pactsLoading, isError: pactsError, refetch: refetchPacts } = usePacts();
   const {
     data: submissions,
     fetchNextPage: fetchMoreSubmissions,
@@ -80,7 +83,47 @@ export default function PactDetailScreen() {
 
   const pact = getPactById(id);
 
-  if (!pact) return null;
+  if (pactsLoading) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
+        <View style={styles.topBar}>
+          <Pressable style={styles.backButton} onPress={() => router.canGoBack() ? router.back() : router.replace('/')}>
+            <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
+            <Text style={[styles.backText, { color: colors.textPrimary }]}>Back</Text>
+          </Pressable>
+        </View>
+        <View style={{ alignItems: 'center', paddingTop: spacing.xxl, gap: spacing.md }}>
+          <Skeleton width={64} height={64} radius={borderRadius.xl} />
+          <Skeleton width={180} height={24} />
+          <Skeleton width={120} height={16} />
+          <Skeleton width="90%" height={40} style={{ marginTop: spacing.lg }} />
+        </View>
+        <View style={{ paddingHorizontal: spacing.xl, marginTop: spacing.xxl, gap: spacing.sm }}>
+          <Skeleton width={100} height={18} />
+          <Skeleton width="100%" height={56} />
+          <Skeleton width="100%" height={56} />
+        </View>
+      </View>
+    );
+  }
+
+  if (pactsError || !pact) {
+    return (
+      <View style={[styles.container, { paddingTop: insets.top, backgroundColor: colors.background }]}>
+        <View style={styles.topBar}>
+          <Pressable style={styles.backButton} onPress={() => router.canGoBack() ? router.back() : router.replace('/')}>
+            <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
+            <Text style={[styles.backText, { color: colors.textPrimary }]}>Back</Text>
+          </Pressable>
+        </View>
+        <ErrorState
+          message={pactsError ? "Couldn't load pact details" : "Pact not found"}
+          onRetry={pactsError ? () => refetchPacts() : undefined}
+        />
+      </View>
+    );
+  }
+
   const pactColor = adaptColor(pact.color, isDark);
 
   const participants = getParticipants(pact);

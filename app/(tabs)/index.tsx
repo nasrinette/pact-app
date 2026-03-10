@@ -18,6 +18,7 @@ import ActivityFeed from '@/components/pacts/ActivityFeed';
 import DeadlineWarning from '@/components/pacts/DeadlineWarning';
 import EmptyState from '@/components/shared/EmptyState';
 import HomeSkeleton from '@/components/shared/HomeSkeleton';
+import ErrorState from '@/components/shared/ErrorState';
 
 const HEADER_HEIGHT = 64;
 
@@ -33,7 +34,7 @@ export default function PactsHomeScreen() {
   const { colors, isDark, mode, setMode } = useTheme();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { data: pacts = [], isLoading: loading } = usePacts();
+  const { data: pacts = [], isLoading: loading, isError, refetch } = usePacts();
   const { data: notifications = [] } = useFlatNotifications();
   const { getUnreadNotificationCount } = useDataHelpers();
   const [showWarning, setShowWarning] = useState(true);
@@ -109,6 +110,8 @@ export default function PactsHomeScreen() {
 
         {loading ? (
           <HomeSkeleton />
+        ) : isError ? (
+          <ErrorState message="Couldn't load your pacts" onRetry={() => refetch()} />
         ) : (
           <>
             {/* Activity Feed */}
