@@ -7,6 +7,8 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '@/api/queryClient';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+import { ToastProvider } from '@/contexts/ToastContext';
+import ErrorBoundary from '@/components/shared/ErrorBoundary';
 import { isPushSupported, isSubscribedToPush, subscribeToPush } from '@/api/pushSubscription';
 import { connectSocket, disconnectSocket } from '@/api/socket';
 import LoginScreen from './login';
@@ -96,6 +98,20 @@ function RootStack() {
           }}
         />
         <Stack.Screen
+          name="edit-profile"
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="user/[id]"
+          options={{
+            headerShown: false,
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
           name="legal"
           options={{
             headerShown: false,
@@ -118,11 +134,15 @@ function RootStack() {
 export default function RootLayout() {
   return (
     <ThemeProvider>
-      <AuthProvider>
-        <QueryClientProvider client={queryClient}>
-          <RootStack />
-        </QueryClientProvider>
-      </AuthProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <QueryClientProvider client={queryClient}>
+            <ErrorBoundary onReset={() => queryClient.clear()}>
+              <RootStack />
+            </ErrorBoundary>
+          </QueryClientProvider>
+        </AuthProvider>
+      </ToastProvider>
     </ThemeProvider>
   );
 }
