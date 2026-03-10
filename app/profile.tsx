@@ -19,7 +19,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useDataHelpers } from '@/api/helpers';
 import { useUserSearch, useFriendRequests } from '@/api/queries';
-import { useSendFriendRequest, useAcceptFriendRequest, useDeclineFriendRequest, useUpdateAvatar } from '@/api/mutations';
+import { useSendFriendRequest, useAcceptFriendRequest, useDeclineFriendRequest, useUpdateAvatar, useDeleteAccount } from '@/api/mutations';
+import { useToast } from '@/contexts/ToastContext';
 import Avatar from '@/components/ui/Avatar';
 import Button from '@/components/ui/Button';
 import { isPushSupported, isSubscribedToPush, subscribeToPush, unsubscribeFromPush, getPushPermission } from '@/api/pushSubscription';
@@ -61,6 +62,9 @@ export default function ProfileScreen() {
   const sendRequest = useSendFriendRequest();
   const acceptRequest = useAcceptFriendRequest();
   const declineRequest = useDeclineFriendRequest();
+  const deleteAccount = useDeleteAccount();
+  const { showToast } = useToast();
+  const [deleting, setDeleting] = useState(false);
 
   // Push notification state (web only)
   const [pushEnabled, setPushEnabled] = useState(false);
@@ -142,6 +146,18 @@ export default function ProfileScreen() {
           <Text style={[styles.profileUsername, { color: colors.textSecondary }]}>
             @{user?.username}
           </Text>
+          {!!user?.bio && (
+            <Text style={[styles.profileBio, { color: colors.textSecondary }]} numberOfLines={3}>
+              {user.bio}
+            </Text>
+          )}
+          <Pressable
+            style={[styles.editProfileBtn, { borderColor: colors.border }]}
+            onPress={() => router.push('/edit-profile')}
+          >
+            <Ionicons name="pencil-outline" size={14} color={colors.primary} />
+            <Text style={[styles.editProfileText, { color: colors.primary }]}>Edit Profile</Text>
+          </Pressable>
         </View>
 
         {/* Stats row */}
@@ -375,7 +391,7 @@ export default function ProfileScreen() {
             {friends.map((friend) => {
               const firstName = friend.name.split(' ')[0];
               return (
-                <View key={friend.id} style={styles.friendItem}>
+                <Pressable key={friend.id} style={styles.friendItem} onPress={() => router.push(`/user/${friend.id}`)}>
                   <Image
                     source={{ uri: friend.avatar }}
                     style={styles.friendAvatar}
@@ -386,7 +402,7 @@ export default function ProfileScreen() {
                   >
                     {firstName}
                   </Text>
-                </View>
+                </Pressable>
               );
             })}
           </ScrollView>
@@ -428,6 +444,69 @@ export default function ProfileScreen() {
             }}
             fullWidth
           />
+        </View>
+
+        {/* Delete Account */}
+        <View style={styles.deleteContainer}>
+          <Pressable
+            style={[styles.deleteBtn, { borderColor: colors.error }]}
+            disabled={deleting}
+            onPress={() => {
+              const doDelete = async () => {
+                setDeleting(true);
+                try {
+                  await deleteAccount.mutateAsync();
+                  await logout();
+                } catch (e: any) {
+                  setDeleting(false);
+                  showToast(e.message || 'Failed to delete account', 'error');
+                }
+              };
+
+              if (Platform.OS === 'web') {
+                if (!window.confirm('Delete your account?\n\nThis will permanently delete ALL your data including pacts, submissions, streaks, and friendships. This action cannot be undone.')) return;
+                if (!window.confirm('Are you absolutely sure?\n\nThis is your last chance. All your data will be permanently deleted.')) return;
+                if (!window.confirm('Final confirmation: Type-confirm delete.\n\nOnce deleted, there is no way to recover your account or data. Proceed?')) return;
+                doDelete();
+              } else {
+                const { Alert } = require('react-native');
+                Alert.alert(
+                  'Delete Account?',
+                  'This will permanently delete ALL your data including pacts, submissions, streaks, and friendships. This action cannot be undone.',
+                  [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                      text: 'Delete Account',
+                      style: 'destructive',
+                      onPress: () => {
+                        Alert.alert(
+                          'Are you absolutely sure?',
+                          'This is your last chance. All your data will be permanently deleted.',
+                          [
+                            { text: 'Cancel', style: 'cancel' },
+                            {
+                              text: 'Yes, Delete Everything',
+                              style: 'destructive',
+                              onPress: doDelete,
+                            },
+                          ]
+                        );
+                      },
+                    },
+                  ]
+                );
+              }
+            }}
+          >
+            {deleting ? (
+              <ActivityIndicator size="small" color={colors.error} />
+            ) : (
+              <>
+                <Ionicons name="trash-outline" size={16} color={colors.error} />
+                <Text style={[styles.deleteText, { color: colors.error }]}>Delete Account</Text>
+              </>
+            )}
+          </Pressable>
         </View>
 
         <View style={{ height: spacing.huge }} />
@@ -665,7 +744,42 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     paddingHorizontal: spacing.xl,
   },
+  profileBio: {
+    ...typography.body,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+    maxWidth: 280,
+  },
+  editProfileBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginTop: spacing.md,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+  },
+  editProfileText: {
+    ...typography.captionBold,
+  },
   signOutContainer: {
     marginTop: spacing.xxxl,
+  },
+  deleteContainer: {
+    marginTop: spacing.lg,
+    alignItems: 'center',
+  },
+  deleteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+  },
+  deleteText: {
+    ...typography.bodyBold,
   },
 });
