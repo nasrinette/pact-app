@@ -5,6 +5,9 @@
   "scripts": {
     "start": "expo start",
     "dev": "expo start",
+    "dev:local": "cp .env.local .env && expo start --web --clear",
+    "dev:staging": "cp .env.staging .env && expo start --web --clear",
+    "dev:production": "cp .env.production .env && expo start --web --clear",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",

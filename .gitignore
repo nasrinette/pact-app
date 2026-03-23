@@ -12,3 +12,6 @@ web-build/
 ios/
 android/
 .env
+.env.local
+.env.staging
+.env.production
